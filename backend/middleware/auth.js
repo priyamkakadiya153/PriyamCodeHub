@@ -1,0 +1,133 @@
+// AUTH , IS STUDENT , IS INSTRUCTOR , IS ADMIN
+
+const jwt = require("jsonwebtoken");
+require('dotenv').config();
+
+
+// ================ AUTH ================
+// user Authentication by checking token validating
+exports.auth = (req, res, next) => {
+    try {
+        // extraction token from anyone from this 3 ways
+        let token = 
+            req.body?.token?.trim() || 
+            req.cookies?.token?.trim() || 
+            req.header('Authorization')?.replace('Bearer ', '')?.trim();
+
+        // if token is missing
+        if (!token || token === "null" || token === "undefined") {
+            console.log("AUTH ERROR: Token Missing or invalid string from ", req.originalUrl);
+            console.log("HEADERS:", req.headers['authorization'] ? "Auth Header Present" : "Auth Header MISSING");
+            return res.status(401).json({
+                success: false,
+                message: 'Token is Missing'
+            });
+        }
+
+        // verify token
+        try {
+            const decode = jwt.verify(token, process.env.JWT_SECRET);
+            console.log("AUTH SUCCESS: Token Decoded for: ", decode.email, " Role: ", decode.accountType);
+            req.user = decode;
+        }
+        catch (error) {
+            console.log('Error while decoding token');
+            console.log(error);
+            return res.status(401).json({
+                success: false,
+                error: error.message,
+                message: 'Error while decoding token'
+            })
+        }
+        // go to next middleware
+        next();
+    }
+    catch (error) {
+        console.log('Error while token validating');
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error while token validating'
+        })
+    }
+}
+
+
+
+
+
+// ================ IS STUDENT ================
+exports.isStudent = (req, res, next) => {
+    try {
+        // console.log('User data -> ', req.user)
+        if (req.user?.accountType != 'Student') {
+            return res.status(401).json({
+                success: false,
+                message: 'This Page is protected only for student'
+            })
+        }
+        // go to next middleware
+        next();
+    }
+    catch (error) {
+        console.log('Error while cheching user validity with student accountType');
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while cheching user validity with student accountType'
+        })
+    }
+}
+
+
+// ================ IS INSTRUCTOR ================
+exports.isInstructor = (req, res, next) => {
+    try {
+        // console.log('User data -> ', req.user)
+        if (req.user?.accountType != 'Instructor') {
+            return res.status(401).json({
+                success: false,
+                message: 'This Page is protected only for Instructor'
+            })
+        }
+        // go to next middleware
+        next();
+    }
+    catch (error) {
+        console.log('Error while cheching user validity with Instructor accountType');
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while cheching user validity with Instructor accountType'
+        })
+    }
+}
+
+
+// ================ IS ADMIN ================
+exports.isAdmin = (req, res, next) => {
+    try {
+        // console.log('User data -> ', req.user)
+        if (req.user.accountType != 'Admin') {
+            return res.status(401).json({
+                success: false,
+                message: 'This Page is protected only for Admin'
+            })
+        }
+        // go to next middleware
+        next();
+    }
+    catch (error) {
+        console.log('Error while cheching user validity with Admin accountType');
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Error while cheching user validity with Admin accountType'
+        })
+    }
+}
+
+
